@@ -1,3 +1,4 @@
+import itertools
 import torch
 import torch.nn as nn
 import numpy as np
@@ -257,7 +258,6 @@ class BiFPN(nn.Module):
 
         # Weights for P6_0 and P7_0 to P6_1
         p6_w1 = self.p6_w1_relu(self.p6_w1)
-        print(p6_w1)
         weight = p6_w1 / (torch.sum(p6_w1, dim=0) + self.epsilon)
         # Connections for P6_0 and P7_0 to P6_1 respectively
         p6_up = self.conv6_up(self.swish(weight[0] * p6_in + weight[1] * self.p6_upsample(p7_in)))
@@ -552,6 +552,7 @@ class EfficientDet(nn.Module):
                                **kwargs)
 
         self.backbone_net = Backbone(self.backbone_compound_coef[compound_coef], load_weights)
+        
     def freeze_bn(self):
         for m in self.modules():
             if isinstance(m, nn.BatchNorm2d):

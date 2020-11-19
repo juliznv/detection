@@ -44,8 +44,7 @@ class VID(Dataset):
         Return the length of current dataset
         '''
         return len(self.img_ids)
-        
-        
+
 if __name__ == '__main__':
     root = r'D:\data\ILSVRC'
     import torchvision.transforms as tfs
