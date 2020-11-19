@@ -7,18 +7,17 @@ import matplotlib.pyplot as plt
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
-from models import EfficientNet
-
+from models.efficientnet import EfficientNet
+from models.efficientdet import EfficientDet
+from models.loss import FocalLoss
 
 mean = (0.485, 0.456, 0.406)
 std = (0.229, 0.224, 0.225)
-model = EfficientNet.from_pretrained('efficientnet-b0',False,True).state_dict()
-parameters = torch.load('weights/adv-efficientnet-b0.pth')
-parameters = [k for _,k in parameters.items()]
-for i,(k,v) in enumerate(model.items()):
-    model[k] = parameters[i]
-    
-torch.save(model,'weights/adv-efficientnet-b0.pth')
+#model = EfficientNet.from_pretrained('efficientnet-b0',False,True)
+criterion = FocalLoss()
+model = EfficientDet()
+print(model)
+
 
 '''
 data_dir = 'data'
