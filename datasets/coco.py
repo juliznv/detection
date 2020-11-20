@@ -1,4 +1,5 @@
 import os
+import torch
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from PIL import Image
@@ -38,12 +39,17 @@ class COCODetect(Dataset):
         img = Image.open(img_path).convert('RGB')
         if self.transform is not None:
             img =self.transform(img)
-        ann_ids = self.coco.getAnnIds(imgIds=img_id)
-        target = self.coco.loadAnns(ann_ids)
-        if self.target_transform is not None:
-            target = self.target_transform(target)
-        
-        return img, target
+        if 'train' in self.set_name:
+            ann_ids = self.coco.getAnnIds(imgIds=img_id)
+            target = self.coco.loadAnns(ann_ids)
+            if self.target_transform is not None:
+                target = self.target_transform(target)
+            return img, target
+        elif 'val' in self.set_name:
+            metas = [self.coco.loadImgs(img_id)[0][i] for i in ['height','width']]
+            return img, img_id, torch.Tensor(metas)
+        else:
+            return img
 
     def __len__(self):
         return len(self.img_ids)
