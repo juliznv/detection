@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from models import EfficientDet, FocalLoss
-from datasets import CocoDataset, Resizer, Normalizer, Augmenter, collater
+from datasets import CocoDataset, Resizer, Normalizer, Augmenter, collater,VIDDataset
 from utils import init_weights
 
 class Params:
@@ -138,9 +138,20 @@ if __name__ == '__main__':
                     'drop_last': False,
                     'collate_fn': collater,
                     'num_workers': opt.num_workers}
+    '''
     trainset = CocoDataset(root_dir = os.path.join(opt.data_path,params.project_name),set = params.val_set,
                            transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                          Augmenter(),
                                                          Resizer(input_sizes[opt.compound_coef])]))
-    trainloader = DataLoader(trainset,**train_params)                        
-    train(trainloader,model,criterion,optimizer,opt)
+    '''
+    data_dir = os.path.join(opt.data_path, params.train_set)
+    ann_dir = os.path.join(opt.data_path, 'annotations')
+    tfs = transforms.Compose([Normalizer(mean=params.mean, std=params.std),
+                              Augmenter(),
+                              Resizer(input_sizes[opt.compound_coef])])
+    for f in os.listdir(data_dir):
+        img_dir = os.path.join(data_dir,f)
+        ann_file = os.path.join(ann_dir,f + '.json')
+        trainset = VIDDataset(img_dir,ann_file,tfs)
+        trainloader = DataLoader(trainset,**train_params)                        
+        train(trainloader,model,criterion,optimizer,opt)
