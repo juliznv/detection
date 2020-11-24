@@ -54,6 +54,8 @@ def get_args():
 
 
 def save_checkpoint(model, name, opt):
+    if not os.path.exists(opt.saved_path):
+        os.mkdir(opt.saved_path)
     torch.save(model.state_dict(), os.path.join(opt.saved_path, name))
 
 def train(dataloader, model, criterion, optimizer, opt):
