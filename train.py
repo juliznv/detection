@@ -33,9 +33,9 @@ def get_args():
     parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
                                                                    'suggest using \'admaw\' until the'
                                                                    ' very final stage then switch to \'sgd\'')
-    parser.add_argument('--num_epochs', type=int, default=500)
+    parser.add_argument('--num_epochs', type=int, default=10)
     parser.add_argument('--val_interval', type=int, default=1, help='Number of epoches between valing phases')
-    parser.add_argument('--save_interval', type=int, default=500, help='Number of steps between saving')
+    parser.add_argument('--save_interval', type=int, default=10, help='Number of steps between saving')
     parser.add_argument('--es_min_delta', type=float, default=0.0,
                         help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
     parser.add_argument('--es_patience', type=int, default=0,
@@ -54,7 +54,7 @@ def get_args():
 
 
 def save_checkpoint(model, name, opt):
-    torch.save(model.model.state_dict(), os.path.join(opt.saved_path, name))
+    torch.save(model.state_dict(), os.path.join(opt.saved_path, name))
 
 def train(dataloader, model, criterion, optimizer, opt):
     use_cuda = True if torch.cuda.is_available() and not opt.no_cuda else False
@@ -86,7 +86,7 @@ def train(dataloader, model, criterion, optimizer, opt):
                     reg_loss.item(), loss.item()))
         
         scheduler.step(np.mean(epoch_loss))
-        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}.pth')
+        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}.pth',opt)
 
 
     
