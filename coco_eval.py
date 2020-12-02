@@ -58,7 +58,10 @@ override_prev_results = args.override
 project_name = args.project
 weights_path = f'weights/efficientdet-d{compound_coef}.pth' if args.weights is None else args.weights
 batch_size = args.batch_size
+<<<<<<< HEAD
 
+=======
+>>>>>>> 13481d5fb855e05403b111c87a52328f59cf0bca
 print(f'running coco-style evaluation on project {project_name}, weights {weights_path}...')
 
 params = yaml.safe_load(open(f'configs/{project_name}.yml'))
@@ -66,20 +69,18 @@ obj_list = params['obj_list']
 
 input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
 
-
-def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
+def evaluate(dataloader, coco, model, threshold=0.5):
     results = []
 
     regressBoxes = BBoxTransform()
     clipBoxes = ClipBoxes()
 
-    for image_id in tqdm(image_ids):
-        image_info = coco.loadImgs(image_id)[0]
-        image_path = img_path + image_info['file_name']
-
-        ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_sizes[compound_coef])
-        x = torch.from_numpy(framed_imgs[0])
-
+    for i, data in tqdm(enumerate(dataloader)):
+        x, img_ids, metas = data
+        metas = metas.numpy().tolist()
+        img_ids = img_ids.numpy().tolist()
+        _,_,h,w = x.size()
+        metas = [[w,h,ow,oh] for oh, ow in metas]
         if use_cuda:
             x = x.cuda(gpu)
             if use_float16:
@@ -89,8 +90,7 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
         else:
             x = x.float()
 
-        x = x.unsqueeze(0).permute(0, 3, 1, 2)
-        features, regression, classification, anchors = model(x)
+        regression, classification, anchors = model(x)
 
         preds = postprocess(x,
                             anchors, regression, classification,
@@ -100,33 +100,33 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
         if not preds:
             continue
 
-        preds = invert_affine(framed_metas, preds)[0]
+        preds = invert_affine(metas, preds)
+        for j, pred in enumerate(preds):
+            scores = pred['scores']
+            class_ids = pred['class_ids']
+            rois = pred['rois']
 
-        scores = preds['scores']
-        class_ids = preds['class_ids']
-        rois = preds['rois']
+            if rois.shape[0] > 0:
+                # x1,y1,x2,y2 -> x1,y1,w,h
+                rois[:, 2] -= rois[:, 0]
+                rois[:, 3] -= rois[:, 1]
 
-        if rois.shape[0] > 0:
-            # x1,y1,x2,y2 -> x1,y1,w,h
-            rois[:, 2] -= rois[:, 0]
-            rois[:, 3] -= rois[:, 1]
+                bbox_score = scores
 
-            bbox_score = scores
+                for roi_id in range(rois.shape[0]):
+                    score = float(bbox_score[roi_id])
+                    label = int(class_ids[roi_id])
+                    box = rois[roi_id, :]
 
-            for roi_id in range(rois.shape[0]):
-                score = float(bbox_score[roi_id])
-                label = int(class_ids[roi_id])
-                box = rois[roi_id, :]
+                    image_result = {
+                        'image_id': img_ids[j],
+                        'category_id': label + 1,
+                        'score': float(score),
+                        'bbox': box.tolist(),
+                    }
 
-                image_result = {
-                    'image_id': image_id,
-                    'category_id': label + 1,
-                    'score': float(score),
-                    'bbox': box.tolist(),
-                }
-
-                results.append(image_result)
-
+                    results.append(image_result)
+                    
     if not len(results):
         raise Exception('the model does not provide any valid output,\
             check model architecture and the data input')
@@ -137,6 +137,7 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
         os.remove(filepath)
     json.dump(results, open(filepath, 'w'), indent=4)
 
+<<<<<<< HEAD
 def evaluate(dataloader, coco, model, threshold=0.5):
     results = []
 
@@ -205,6 +206,8 @@ def evaluate(dataloader, coco, model, threshold=0.5):
         os.remove(filepath)
     json.dump(results, open(filepath, 'w'), indent=4)
 
+=======
+>>>>>>> 13481d5fb855e05403b111c87a52328f59cf0bca
 def _eval(coco_gt, image_ids, pred_json_path):
     # load results in COCO evaluation tool
     coco_pred = coco_gt.loadRes(pred_json_path)
@@ -247,6 +250,9 @@ if __name__ == '__main__':
             if use_float16:
                 model.half()
         evaluate(valloader, coco_gt, model)
+<<<<<<< HEAD
         #evaluate_coco(VAL_IMGS, SET_NAME, image_ids, coco_gt, model)
+=======
+>>>>>>> 13481d5fb855e05403b111c87a52328f59cf0bca
 
     _eval(coco_gt, image_ids, f'efficientdet_d{compound_coef}_bbox_results.json')

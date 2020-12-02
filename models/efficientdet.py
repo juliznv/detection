@@ -570,7 +570,7 @@ class EfficientDet(nn.Module):
         classification = self.classifier(features)
         anchors = self.anchors(inputs, inputs.dtype)
 
-        return features, regression, classification, anchors
+        return regression, classification, anchors
 
     def init_backbone(self, path):
         state_dict = torch.load(path)

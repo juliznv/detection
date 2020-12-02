@@ -1,3 +1,4 @@
 # Simple Dataset Class
-from .vid import VID
-from .coco import COCODetect
+from .vid import *
+from .coco import *
+from .utils import *
