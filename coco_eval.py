@@ -58,6 +58,7 @@ override_prev_results = args.override
 project_name = args.project
 weights_path = f'weights/efficientdet-d{compound_coef}.pth' if args.weights is None else args.weights
 batch_size = args.batch_size
+
 print(f'running coco-style evaluation on project {project_name}, weights {weights_path}...')
 
 params = yaml.safe_load(open(f'configs/{project_name}.yml'))
